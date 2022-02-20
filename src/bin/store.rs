@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::BufRead;
 use std::path::PathBuf;
-use twpis::{Error, Image, Store};
+use twpis::{model::Size, Error, Image, Store};
 
 fn main() -> Result<(), Error> {
     let opts: Opts = Opts::parse();
@@ -78,6 +78,19 @@ fn main() -> Result<(), Error> {
                 }
             }
         }
+        Command::ExtractPaths { base } => {
+            let store = Store::new(base);
+
+            for line in std::io::stdin().lock().lines() {
+                let line = line?;
+                let image = line.parse::<Image>()?.with_size(Size::Square400);
+                let path = store.path(image.path());
+
+                if path.exists() {
+                    println!("{}", path.display());
+                }
+            }
+        }
     }
 
     Ok(())
@@ -112,4 +125,6 @@ enum Command {
     },
     /// Filter known URLs from stdin
     FilterKnown { base: String },
+    /// Return paths for a list of urls from stdin
+    ExtractPaths { base: String },
 }
